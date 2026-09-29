@@ -17,6 +17,7 @@ export function ReadMode({
   sound,
   onClose,
   onPage,
+  onMeta,
 }: {
   pages: readonly Page[];
   byPage: Map<string, Item[]>;
@@ -25,17 +26,23 @@ export function ReadMode({
   sound: boolean;
   onClose: (lastIndex: number) => void;
   onPage?: (i: number) => void;
+  onMeta: (patch: Partial<Meta>) => void;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [idx, setIdx] = useState(start);
   const [flip, setFlip] = useState<{ to: number; dir: 1 | -1 } | null>(null);
+  const endingText = meta.ending || t("theEnd");
+  const byLabel = lang === "ja" ? "さく・え" : "by";
+  // static copy of the closing page, used while a page is turning
   const endSpread = useMemo<Spread>(() => {
     const id = "__end";
-    const a = { ...makeText(id, ""), text: t("theEnd"), size: 8, x: 50, y: 27, w: 60, font: "crayon" as const, color: "#ff5a5f" };
-    const b = { ...makeText(id, ""), x: 50, y: 38, w: 60, size: 2.6, bind: "authors" as const, font: "pencil" as const };
-    const c = { ...makeText(id, ""), x: 50, y: 45, w: 40, size: 3.4, text: "♡", color: "#ff8fb8" };
-    return { page: { id, bg: "paper" }, items: [a, b, c] };
-  }, [t]);
+    const a = { ...makeText(id, ""), text: endingText, size: 8, x: 50, y: 25, w: 70, font: "crayon" as const, color: "#ff5c93" };
+    const by = { ...makeText(id, ""), text: byLabel, size: 1.8, x: 50, y: 34.5, w: 30, font: "round" as const, color: "#a08e98" };
+    const b = { ...makeText(id, ""), x: 50, y: 39, w: 70, size: 2.8, bind: "authors" as const, font: "pencil" as const };
+    const c = { ...makeText(id, ""), x: 50, y: 46, w: 40, size: 3.4, text: "♡", color: "#ff8fb8" };
+    return { page: { id, bg: "paper" }, items: [a, by, b, c] };
+  }, [endingText, byLabel]);
+  const endStatic = useMemo(() => endSpread.items.filter((i) => i.bind !== "authors" && i.text !== endingText), [endSpread, endingText]);
   const total = pages.length + 1;
   const spreadAt = useCallback(
     (i: number): Spread => (i >= pages.length ? endSpread : { page: pages[i], items: byPage.get(pages[i].id) ?? [] }),
@@ -64,6 +71,7 @@ export function ReadMode({
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).closest?.("input, textarea")) return;
       if (e.key === "ArrowRight" || e.key === " ") {
         e.preventDefault();
         go(idxRef.current + 1);
@@ -105,8 +113,34 @@ export function ReadMode({
         <div className="book book-read">
           <div className="book-edges" />
           <div className="spread">
-            {flip ? <Flip from={cur} to={spreadAt(flip.to)} dir={flip.dir} meta={meta} onDone={done} ms={1000} /> : <PageView page={cur.page} items={cur.items} meta={meta} />}
-            {!flip && (
+            {flip ? (
+              <Flip from={cur} to={spreadAt(flip.to)} dir={flip.dir} meta={meta} onDone={done} ms={1000} />
+            ) : idx >= pages.length ? (
+              <PageView page={endSpread.page} items={endStatic} meta={meta}>
+                <div className="end-edit">
+                  <input
+                    className="end-ending"
+                    value={meta.ending ?? ""}
+                    placeholder={t("theEnd")}
+                    onChange={(e) => onMeta({ ending: e.target.value })}
+                    maxLength={40}
+                    aria-label={t("theEnd")}
+                  />
+                  <input
+                    className="end-authors"
+                    value={meta.authors}
+                    placeholder={lang === "ja" ? "まな と げんぞう" : "Mana & Genzo"}
+                    onChange={(e) => onMeta({ authors: e.target.value })}
+                    maxLength={60}
+                    aria-label={byLabel}
+                  />
+                  <span className="end-hint">✎ {lang === "ja" ? "タップして書きかえられます" : "Tap to edit"}</span>
+                </div>
+              </PageView>
+            ) : (
+              <PageView page={cur.page} items={cur.items} meta={meta} />
+            )}
+            {!flip && idx < pages.length && (
               <>
                 <button className="hot hot-l" onClick={() => go(idx - 1)} aria-label={t("prev")} />
                 <button className="hot hot-r" onClick={() => go(idx + 1)} aria-label={t("next")} />

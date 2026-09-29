@@ -41,6 +41,8 @@ export type Page = {
 export type Meta = {
   title: string;
   authors: string;
+  /** closing words on the last page (empty → "The End" / "おしまい") */
+  ending?: string;
 };
 
 export type Peer = {

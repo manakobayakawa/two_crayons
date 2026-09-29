@@ -102,6 +102,14 @@ export function Editor({ bookId, profile, keyProblem }: { bookId: string; profil
   }, [selected, editing]);
 
   useEffect(() => setShelfTitle(bookId, meta.title), [bookId, meta.title]);
+  // "Mana & …" → "Mana & Genzo" the first time the second author opens the book
+  useEffect(() => {
+    const a = meta.authors || "";
+    if (a.endsWith(" & …") && profile.name && !a.startsWith(`${profile.name} `)) {
+      api.setMeta({ authors: a.replace(/ & …$/, ` & ${profile.name}`) });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meta.authors, profile.name]);
   useEffect(() => {
     document.title = `${meta.title || "Two Crayons"} · Two Crayons`;
   }, [meta.title]);
@@ -506,6 +514,7 @@ export function Editor({ bookId, profile, keyProblem }: { bookId: string; profil
           meta={meta}
           start={idx}
           sound={sound}
+          onMeta={api.setMeta}
           onPage={follow ? undefined : (i) => api.setPresence({ pageId: pages[i]?.id ?? null })}
           onClose={(i) => {
             setReading(false);

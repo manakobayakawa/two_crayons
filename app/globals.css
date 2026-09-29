@@ -2436,3 +2436,60 @@ body {
   text-align: center;
   color: var(--ink-soft);
 }
+
+/* ───────── editable closing page ───────── */
+.end-edit {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+.end-edit input {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  border: 0;
+  border-bottom: 3px dashed transparent;
+  background: transparent;
+  text-align: center;
+  outline: none;
+  padding: 0.05em 0.3em;
+  border-radius: 0.3em 0.3em 0 0;
+  transition: border-color 0.15s, background 0.15s;
+  cursor: text;
+}
+.end-edit input:hover {
+  border-bottom-color: rgba(255, 92, 147, 0.45);
+}
+.end-edit input:focus {
+  border-bottom-color: var(--hot);
+  background: rgba(255, 230, 240, 0.6);
+}
+.end-edit input::placeholder {
+  color: inherit;
+  opacity: 0.45;
+}
+.end-ending {
+  top: calc(25 * 1cqw);
+  width: calc(72 * 1cqw);
+  font-family: var(--hand);
+  font-size: calc(8 * 1cqw);
+  color: #ff5c93;
+}
+.end-authors {
+  top: calc(39 * 1cqw);
+  width: calc(64 * 1cqw);
+  font-family: "Patrick Hand", "Klee One", cursive;
+  font-size: calc(2.8 * 1cqw);
+  color: var(--ink);
+}
+.end-hint {
+  position: absolute;
+  left: 50%;
+  top: calc(54 * 1cqw);
+  transform: translateX(-50%);
+  font: 600 calc(1.25 * 1cqw) / 1 var(--ui);
+  color: #a08e98;
+  white-space: nowrap;
+}
