@@ -9,6 +9,7 @@ import {
   useBroadcastEvent,
   useCanRedo,
   useCanUndo,
+  useErrorListener,
   useEventListener,
   useHistory,
   useMutation,
@@ -21,12 +22,12 @@ import type { Item, Meta, Page, Peer, Presence, Reaction } from "./types";
 import { seedDoc, type Doc } from "./doc";
 import { safeGet, safeSet, uid } from "./util";
 
-export const LIVEBLOCKS_KEY = process.env.NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY || "";
 
 export type Status = "connecting" | "live" | "reconnecting" | "solo";
 
 export type BookApi = {
   status: Status;
+  error: string | null;
   meta: Meta;
   pages: readonly Page[];
   items: readonly Item[];
@@ -59,13 +60,34 @@ export const useBook = () => {
 
 type Seed = { lang: "en" | "ja"; name: string; color: string };
 
-export function BookProvider({ bookId, seed, children, fallback }: { bookId: string; seed: Seed; children: ReactNode; fallback: ReactNode }) {
-  if (!LIVEBLOCKS_KEY) return <SoloBook bookId={bookId} seed={seed}>{children}</SoloBook>;
+export function BookProvider({
+  bookId,
+  seed,
+  children,
+  fallback,
+  liveKey,
+}: {
+  bookId: string;
+  seed: Seed;
+  children: ReactNode;
+  fallback: ReactNode;
+  liveKey: string;
+}) {
+  if (!liveKey) return <SoloBook bookId={bookId} seed={seed}>{children}</SoloBook>;
+  return (
+    <LiveProvider bookId={bookId} seed={seed} liveKey={liveKey} fallback={fallback}>
+      {children}
+    </LiveProvider>
+  );
+}
+
+function LiveProvider({ bookId, seed, children, fallback, liveKey }: { bookId: string; seed: Seed; children: ReactNode; fallback: ReactNode; liveKey: string }) {
+  const [error, setError] = useState<string | null>(null);
   const initialPresence: Presence = { name: seed.name, color: seed.color, pageId: null, cursor: null, selected: null, editing: null };
   return (
-    <LiveblocksProvider publicApiKey={LIVEBLOCKS_KEY} throttle={32}>
+    <LiveblocksProvider publicApiKey={liveKey} throttle={32}>
       <RoomProvider
-        id={`two-crayons:${bookId}`}
+        id={`two-crayons-${bookId}`}
         initialPresence={initialPresence}
         initialStorage={() => {
           const d = seedDoc(seed.lang, seed.name);
@@ -76,11 +98,37 @@ export function BookProvider({ bookId, seed, children, fallback }: { bookId: str
           };
         }}
       >
-        <ClientSideSuspense fallback={fallback}>
-          <LiveBook>{children}</LiveBook>
+        <ErrorWatch onError={setError} />
+        <ClientSideSuspense fallback={error ? <LiveError message={error} /> : fallback}>
+          <LiveBook error={error}>{children}</LiveBook>
         </ClientSideSuspense>
       </RoomProvider>
     </LiveblocksProvider>
+  );
+}
+
+function ErrorWatch({ onError }: { onError: (m: string) => void }) {
+  useErrorListener((err) => {
+    console.error("[two-crayons] Liveblocks:", err);
+    onError(err.message || String(err));
+  });
+  return null;
+}
+
+function LiveError({ message }: { message: string }) {
+  return (
+    <div className="loading">
+      <div className="solo-help" role="alert" style={{ maxWidth: 520 }}>
+        <div className="solo-help-head">
+          <span className="solo-dot" />
+          <strong>Liveblocks に接続できません / Can’t connect to Liveblocks</strong>
+        </div>
+        <p>{message}</p>
+        <p>
+          キーが正しい Public key（pk_…）か、Liveblocks のプロジェクトで Public key が有効になっているか確認してください。 / Check that the Public key (pk_…) is correct and enabled in your Liveblocks project.
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -98,7 +146,7 @@ function useReactionBus() {
   return useMemo(() => ({ emit, on }), [emit, on]);
 }
 
-function LiveBook({ children }: { children: ReactNode }) {
+function LiveBook({ children, error }: { children: ReactNode; error: string | null }) {
   const meta = useStorage((r) => r.meta);
   const pages = useStorage((r) => r.pages);
   const itemMap = useStorage((r) => r.items);
@@ -160,6 +208,7 @@ function LiveBook({ children }: { children: ReactNode }) {
 
   const api: BookApi = {
     status,
+    error,
     meta,
     pages,
     items,
@@ -291,6 +340,7 @@ function SoloBook({ bookId, seed, children }: { bookId: string; seed: Seed; chil
     };
     return {
       status: "solo",
+      error: null,
       meta: doc.meta,
       pages: doc.pages,
       items,

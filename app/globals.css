@@ -2343,3 +2343,96 @@ body {
     animation: none;
   }
 }
+
+/* ───────── solo-mode help ───────── */
+.solo-help {
+  background: #fff;
+  border: 2.4px solid var(--ink);
+  border-radius: 16px 20px 14px 22px / 20px 14px 22px 16px;
+  box-shadow: 4px 5px 0 var(--orange);
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  text-align: left;
+}
+.solo-help p {
+  margin: 8px 0 6px;
+  color: var(--ink-soft);
+}
+.solo-help ol {
+  margin: 0;
+  padding-left: 1.3em;
+  display: grid;
+  gap: 4px;
+}
+.solo-help-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.solo-help-head strong {
+  font-size: 15px;
+}
+.solo-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255, 162, 76, 0.3);
+  flex: none;
+  animation: pulse 1.4s infinite;
+}
+.solo-toggle {
+  margin-left: auto;
+  border: 2px solid var(--ink);
+  background: var(--yellow);
+  border-radius: 999px;
+  padding: 2px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.solo-x {
+  width: 28px;
+  height: 28px;
+  padding: 5px;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+}
+.solo-help:not(.compact) .solo-x {
+  margin-left: auto;
+}
+.solo-float {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 45;
+  width: min(460px, calc(100vw - 36px));
+  animation: toastIn 0.4s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.home-grid .solo-help {
+  margin-top: 20px;
+}
+.toast-err {
+  background: #fff0f0;
+  box-shadow: 4px 5px 0 var(--red);
+  white-space: normal;
+  max-width: min(560px, calc(100vw - 32px));
+}
+@media (max-width: 900px) {
+  .solo-float {
+    right: 10px;
+    left: 10px;
+    bottom: 80px;
+    width: auto;
+  }
+}
+.loading-slow {
+  max-width: 420px;
+  margin: 6px 16px 0 !important;
+  font-size: 14px !important;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--ink-soft);
+}

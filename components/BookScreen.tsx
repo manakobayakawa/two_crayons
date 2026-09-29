@@ -6,8 +6,9 @@ import { useI18n, LangToggle } from "@/lib/i18n";
 import { getProfile, setProfile, touchShelf, type Profile } from "@/lib/profile";
 import { Editor, Logo } from "./Editor";
 import { ProfileForm } from "./ProfileForm";
+import type { KeyProblem } from "@/lib/types";
 
-export function BookScreen({ bookId }: { bookId: string }) {
+export function BookScreen({ bookId, liveKey, keyProblem }: { bookId: string; liveKey: string; keyProblem: KeyProblem }) {
   const { t, lang } = useI18n();
   const [profile, setP] = useState<Profile | null | undefined>(undefined);
   useEffect(() => {
@@ -38,13 +39,19 @@ export function BookScreen({ bookId }: { bookId: string }) {
     );
 
   return (
-    <BookProvider bookId={bookId} seed={{ lang, name: profile.name, color: profile.color }} fallback={<Loading label={t("connecting")} />}>
-      <Editor bookId={bookId} profile={profile} />
+    <BookProvider liveKey={liveKey} bookId={bookId} seed={{ lang, name: profile.name, color: profile.color }} fallback={<Loading label={t("connecting")} slowHint={t("slowConnect")} />}>
+      <Editor bookId={bookId} profile={profile} keyProblem={keyProblem} />
     </BookProvider>
   );
 }
 
-export function Loading({ label }: { label: string }) {
+export function Loading({ label, slowHint }: { label: string; slowHint?: string }) {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!slowHint) return;
+    const t = setTimeout(() => setSlow(true), 10000);
+    return () => clearTimeout(t);
+  }, [slowHint]);
   return (
     <div className="loading">
       <div className="loading-book">
@@ -53,6 +60,7 @@ export function Loading({ label }: { label: string }) {
         <span />
       </div>
       <p className="hand">{label}</p>
+      {slow && <p className="loading-slow">{slowHint}</p>}
     </div>
   );
 }

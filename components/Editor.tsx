@@ -19,6 +19,8 @@ import { ReadMode } from "./ReadMode";
 import { Hearts } from "./Hearts";
 import { PageView } from "./PageView";
 import { Icon } from "./Icons";
+import { SoloHelp } from "./SoloHelp";
+import type { KeyProblem } from "@/lib/types";
 
 function useStableByPage(pages: readonly Page[], items: readonly Item[]) {
   const prev = useRef(new Map<string, Item[]>());
@@ -59,7 +61,7 @@ function findSpot(it: Item, existing: Item[]) {
   return { x: best.x, y: best.y };
 }
 
-export function Editor({ bookId, profile }: { bookId: string; profile: Profile }) {
+export function Editor({ bookId, profile, keyProblem }: { bookId: string; profile: Profile; keyProblem: KeyProblem }) {
   const api = useBook();
   const { t, lang } = useI18n();
   const { pages, items, meta, others } = api;
@@ -82,6 +84,7 @@ export function Editor({ bookId, profile }: { bookId: string; profile: Profile }
   const [toast, setToast] = useState<string | null>(null);
   const [sound, setSound] = useState(true);
   const [printing, setPrinting] = useState(false);
+  const [soloHidden, setSoloHidden] = useState(false);
 
   useEffect(() => setSound(safeGet("tc.sound", true)), []);
   useEffect(() => {
@@ -512,6 +515,12 @@ export function Editor({ bookId, profile }: { bookId: string; profile: Profile }
           }}
         />
       )}
+      {api.status === "solo" && keyProblem && !soloHidden && (
+        <div className="solo-float">
+          <SoloHelp problem={keyProblem} compact onClose={() => setSoloHidden(true)} />
+        </div>
+      )}
+      {api.error && api.status !== "live" && <div className="toast toast-err">Liveblocks: {api.error}</div>}
       <Hearts myName={profile.name} />
       {toast && <div className="toast">{toast}</div>}
       {printing && (

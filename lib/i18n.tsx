@@ -98,6 +98,10 @@ const dict = {
   parts: { en: "Parts", ja: "パーツ" },
   close: { en: "Close", ja: "とじる" },
   sound: { en: "Page sound", ja: "めくる音" },
+  slowConnect: {
+    en: "Taking a while… Check your internet, and that the Liveblocks Public key (pk_…) on Vercel is correct and the site was redeployed.",
+    ja: "時間がかかっています…ネット接続と、Vercel に入れた Liveblocks の Public key（pk_…）が正しいか、再デプロイ済みかを確認してください。",
+  },
   writeHere: { en: "write here…", ja: "ここに書く…" },
   bg: { en: "Scene for this page", ja: "このページの背景" },
   flipTail: { en: "Flip tail", ja: "しっぽ反転" },

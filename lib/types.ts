@@ -56,3 +56,5 @@ export type Peer = {
 export type Presence = Omit<Peer, "id">;
 
 export type Reaction = { type: "love"; name: string; color: string };
+
+export type KeyProblem = "" | "missing" | "secret" | "invalid";
